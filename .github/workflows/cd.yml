@@ -1,0 +1,41 @@
+name: cd
+on:
+  workflow_run:
+    workflows: ["ci"]
+    branches-ignore: [master]
+    types:
+      - completed
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    steps:
+      - name: Event info
+        run: |
+          echo "event=${GITHUB_EVENT_NAME}"
+          echo "ref=${GITHUB_REF}"
+          echo "ref_name=${GITHUB_REF_NAME}"
+          echo "ref_type=${GITHUB_REF_TYPE}"
+          echo "sha=${GITHUB_SHA}"
+          echo "wr_head_branch=${{ github.event.workflow_run.head_branch }}"
+          echo "wr_head_sha=${{ github.event.workflow_run.head_sha }}"
+          echo "wr_conclusion=${{ github.event.workflow_run.conclusion }}"
+          echo "SECRET_USR_SET=${DOCKERHUB_USERNAME:+YES}"
+          echo "SECRET_TOK_SET=${DOCKERHUB_TOKEN:+YES}"
+      - name: Checkout repo
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        with:
+          fetch-depth: 0
+      - name: Inspect checkout
+        run: |
+          echo "checked_out_sha=$(git rev-parse HEAD)"
+          git log -1 --format='subject=%s'
+          echo "--- marker ---"
+          cat attacker_marker.txt || echo "NO-MARKER"

@@ -1,0 +1,14 @@
+name: ci
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build:
+    if: ${{ github.event_name == 'pull_request' || github.ref_name  == 'master' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "ci-ok event=${{ github.event_name }}"
